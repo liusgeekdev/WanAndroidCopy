@@ -73,4 +73,21 @@ public class HomePresenter extends BasePresenter<HomeView> {
     /**
      * 加载更多
      */
+    public void getMoreData() {
+        mCurrentPage++;
+        ServiceApi.getHomeArticle(mCurrentPage)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new RxObserver<ResponseData<ArticleList>>() {
+                    @Override
+                    public void _onNext(ResponseData<ArticleList> articleListResponseData) {
+                        getMvpView().getMoreDataSuccess(articleListResponseData);
+                    }
+
+                    @Override
+                    public void _onError(String errorMseeage) {
+                        getMvpView().getDataError(errorMseeage);
+                    }
+                });
+    }
 }
