@@ -1,0 +1,152 @@
+package com.lius.wanandroidcopy.ui.activity;
+
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.webkit.WebView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+
+import com.example.zhouwei.library.CustomPopWindow;
+import com.lius.wanandroidcopy.R;
+import com.lius.wanandroidcopy.ui.base.BaseActivity;
+import com.lius.wanandroidcopy.ui.presenter.WebViewPresenter;
+import com.lius.wanandroidcopy.ui.view.CommonWebView;
+import com.lius.wanandroidcopy.util.ShareUtils;
+import com.lius.wanandroidcopy.widget.IconFontTextView;
+
+import butterknife.BindView;
+import butterknife.OnClick;
+
+public class WebViewActivity extends BaseActivity<WebViewPresenter,CommonWebView> implements CommonWebView {
+    public static final String WEB_URL = "web_url";
+
+    @BindView(R.id.icon_return)
+    IconFontTextView iconReturn;
+    @BindView(R.id.tv_title)
+    TextView tvTitle;
+    @BindView(R.id.icon_search)
+    IconFontTextView iconSearch;
+    @BindView(R.id.progress_bar)
+    ProgressBar progressBar;
+    @BindView(R.id.webview)
+    WebView webView;
+
+    private String mUrl;
+    private CustomPopWindow mCustomPopWindow;
+
+    @Override
+    public void initView() {
+        tvTitle.setVisibility(View.VISIBLE);
+        tvTitle.setText(R.string.loading);
+        iconReturn.setVisibility(View.VISIBLE);
+        iconSearch.setVisibility(View.VISIBLE);
+        iconSearch.setText(R.string.ic_more);
+    }
+
+    public static void startAction(Context context, String url) {
+        Intent intent = new Intent(context, WebViewActivity.class);
+        intent.putExtra(WEB_URL, url);
+        context.startActivity(intent);
+    }
+
+    @Override
+    protected WebViewPresenter createPresenter() {
+        return new WebViewPresenter();
+    }
+
+    @Override
+    protected int provideContentViewId() {
+        return R.layout.activity_web_view;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mUrl = getIntent().getStringExtra(WEB_URL);
+        mPresenter.setWebView(webView, mUrl);
+    }
+
+    @Override
+    public void setTitle(String title) {
+        tvTitle.setText(title);
+    }
+
+    @Override
+    public ProgressBar getProgressBar() {
+        return progressBar;
+    }
+
+    @OnClick({R.id.icon_return, R.id.icon_search})
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.icon_return:
+                finish();
+                break;
+            case R.id.icon_search:
+                View contentView = LayoutInflater.from(this).inflate(R.layout.popup_menu, null);
+                //处理popWindow显示内容
+                handleLogic(contentView);
+                //创建并显示popWindow
+                mCustomPopWindow = new CustomPopWindow.PopupWindowBuilder(this)
+                        .setView(contentView)
+                        .create()
+                        .showAsDropDown(iconSearch, 10, 10);
+                break;
+        }
+    }
+
+    private void handleLogic(View contentView) {
+        contentView.findViewById(R.id.tv_share).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ShareUtils.share(WebViewActivity.this, webView.getUrl());
+                mCustomPopWindow.dissmiss();
+            }
+        });
+
+        contentView.findViewById(R.id.tv_copy_link).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                cm.setPrimaryClip(ClipData.newPlainText(getString(R.string.copy_link), webView.getUrl()));
+                Toast(getString(R.string.copy_link_success));
+                mCustomPopWindow.dissmiss();
+            }
+        });
+
+        contentView.findViewById(R.id.tv_open_by_browser).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(webView.getUrl()));
+                startActivity(intent);
+                mCustomPopWindow.dissmiss();
+            }
+        });
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (webView.canGoBack()) {
+                webView.goBack();
+                return true;
+            } else {
+                finish();
+                return true;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        webView.destroy();
+    }
+}

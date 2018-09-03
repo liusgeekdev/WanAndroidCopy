@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import com.lius.wanandroidcopy.model.ArticleList;
 import com.lius.wanandroidcopy.model.BannerBean;
 import com.lius.wanandroidcopy.model.ResponseData;
+import com.lius.wanandroidcopy.model.UserBean;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.convert.Converter;
 import com.lzy.okrx2.adapter.ObservableBody;
@@ -17,11 +18,32 @@ import okhttp3.Response;
 
 public class ServiceApi {
 
+    public static final String IS_LOGIN_KEY = "isLogin";
+
     public static final String BASE_URL = "http://wanandroid.com/";
     public static final String bannerUrl = BASE_URL + "banner/json"; //首页banner
     public static final String homeArticleUrl = BASE_URL + "article/list/%d/json";//1.1 首页文章列表
+    public static final String loginUrl = BASE_URL + "user/login";//登录
 
     private static Gson gson = new Gson();
+
+    /**
+     * 登录
+     */
+    public static Observable<ResponseData<UserBean>> login(String username, String password) {
+        return OkGo.<ResponseData<UserBean>>post(loginUrl)
+              .params("username", username)
+              .params("password", password)
+              .converter(new Converter<ResponseData<UserBean>>() {
+                  @Override
+                  public ResponseData<UserBean> convertResponse(Response response) throws Throwable {
+                      Type type = new TypeToken<ResponseData<UserBean>>() {
+
+                      }.getType();
+                      return gson.fromJson(response.body().string(), type);
+                  }
+              }).adapt(new ObservableBody<ResponseData<UserBean>>());
+    }
 
     /**
      * 获取banner数据
