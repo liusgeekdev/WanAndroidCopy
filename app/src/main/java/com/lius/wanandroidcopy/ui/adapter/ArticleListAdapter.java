@@ -4,18 +4,25 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.text.Html;
 import android.view.View;
+import android.widget.TextView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.lius.wanandroidcopy.R;
 import com.lius.wanandroidcopy.api.ServiceApi;
+import com.lius.wanandroidcopy.helper.RxObserver;
 import com.lius.wanandroidcopy.model.ArticleBean;
+import com.lius.wanandroidcopy.model.ResponseData;
+import com.lius.wanandroidcopy.ui.activity.LoginActivity;
 import com.lius.wanandroidcopy.ui.activity.WebViewActivity;
 import com.lius.wanandroidcopy.util.SPUtils;
 import com.lius.wanandroidcopy.util.T;
 import com.lius.wanandroidcopy.widget.IconFontTextView;
 
 import java.util.List;
+
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
 public class ArticleListAdapter extends BaseQuickAdapter<ArticleBean,BaseViewHolder> {
 
@@ -46,7 +53,7 @@ public class ArticleListAdapter extends BaseQuickAdapter<ArticleBean,BaseViewHol
                 tvCollect.setText(mContext.getResources().getText(R.string.ic_collect_nor));
                 tvCollect.setTextColor(mContext.getResources().getColor(R.color.tab_nor_color));
             }
-        }else if (type == 1){
+        } else if (type == 1){
             //收藏列表
             tvCollect.setText(mContext.getResources().getText(R.string.ic_collect_sel));
             tvCollect.setTextColor(mContext.getResources().getColor(R.color.app_blue));
@@ -67,8 +74,103 @@ public class ArticleListAdapter extends BaseQuickAdapter<ArticleBean,BaseViewHol
                    LoginActivity.startAction(mContext);
                    return;
                }
+               if (type == 0) {
+                   //普通文章列表
+                   if (item.isCollect()) {
+                       cancelCollect(item, tvCollect);
+                   } else {
+                       collect(item, tvCollect);
+                   }
+               } else if (type == 1) {
+                   //收藏列表
+                   cancelCollect2(item, tvCollect, holder.getAdapterPosition());
+               }
             }
         });
 
+    }
+
+    /**
+     * 收藏文章
+     */
+    private void collect(ArticleBean bean, TextView tvCollect) {
+        ServiceApi.collectArticle(bean.getId())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new RxObserver<ResponseData<String>>() {
+                    @Override
+                    public void _onNext(ResponseData<String> stringResponseData) {
+                        if (stringResponseData.getErrorCode() == 0) {
+                            T.showShort(mContext, "收藏成功");
+                            bean.setCollect(true);
+                            tvCollect.setText(mContext.getResources().getText(R.string.ic_collect_sel));
+                            tvCollect.setTextColor(mContext.getResources().getColor(R.color.app_blue));
+                        } else {
+                            T.showShort(mContext, stringResponseData.getErrorMsg());
+                        }
+                    }
+
+                    @Override
+                    public void _onError(String errorMseeage) {
+                        T.showShort(mContext, errorMseeage);
+                    }
+                });
+    }
+
+    /**
+     * 取消收藏(文章列表)
+     */
+    private void cancelCollect(ArticleBean bean, TextView tvCollect) {
+        ServiceApi.unCollectArticle(bean.getId())
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(new RxObserver<ResponseData<String>>() {
+            @Override
+            public void _onNext(ResponseData<String> stringResponseData) {
+                if (stringResponseData.getErrorCode() == 0) {
+                    T.showShort(mContext, "取消收藏成功");
+                    bean.setCollect(false);
+                    tvCollect.setText(mContext.getResources().getText(R.string.ic_collect_nor));
+                    tvCollect.setTextColor(mContext.getResources().getColor(R.color.tab_nor_color));
+                } else {
+                    T.showShort(mContext, stringResponseData.getErrorMsg());
+                }
+            }
+
+            @Override
+            public void _onError(String errorMseeage) {
+                T.showShort(mContext, errorMseeage);
+            }
+        });
+    }
+
+    /**
+     * 取消收藏(我的收藏页面)
+     */
+    private void cancelCollect2(ArticleBean bean, TextView tvCollect, int position) {
+       ServiceApi.unCollectArticle2(bean.getId(), bean.getOriginId())
+               .subscribeOn(Schedulers.io())
+               .observeOn(AndroidSchedulers.mainThread())
+               .subscribe(new RxObserver<ResponseData<String>>() {
+                   @Override
+                   public void _onNext(ResponseData<String> stringResponseData) {
+                       if (stringResponseData.getErrorCode() == 0) {
+                           T.showShort(mContext, "取消收藏成功");
+                           getData().remove(position);
+                           if (position != 0) {
+                               notifyItemChanged(position);
+                           } else {
+                               notifyDataSetChanged();
+                           }
+                       } else {
+                           T.showShort(mContext, stringResponseData.getErrorMsg());
+                       }
+                   }
+
+                   @Override
+                   public void _onError(String errorMseeage) {
+                        T.showShort(mContext, errorMseeage);
+                   }
+               });
     }
 }
