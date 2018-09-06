@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.lius.wanandroidcopy.model.ArticleList;
 import com.lius.wanandroidcopy.model.BannerBean;
+import com.lius.wanandroidcopy.model.HotKeyBean;
 import com.lius.wanandroidcopy.model.ResponseData;
 import com.lius.wanandroidcopy.model.TreeBean;
 import com.lius.wanandroidcopy.model.UserBean;
@@ -33,6 +34,9 @@ public class ServiceApi {
     public static final String unCollectUrl2 = BASE_URL + "lg/uncollect/%d/json";//6.4 取消收藏(我的收藏页面)
     public static final String treeUrl = BASE_URL + "tree/json";//2.1 体系数据
     public static final String treeArticleUrl = BASE_URL + "article/list/%d/json?cid=%d";//2.2 知识体系下的文章
+    public static final String collectListUrl = BASE_URL + "lg/collect/list/%d/json";//6.1 收藏文章列表
+    public static final String hotKeyUrl = BASE_URL + "hotkey/json";//1.4 搜索热词
+
 
     private static Gson gson = new Gson();
 
@@ -177,6 +181,39 @@ public class ServiceApi {
                    @Override
                    public ResponseData<ArticleList> convertResponse(Response response) throws Throwable {
                        Type type = new TypeToken<ResponseData<ArticleList>>() {
+
+                       }.getType();
+                       return gson.fromJson(response.body().string(), type);
+                   }
+               }).adapt(new ObservableBody<>());
+    }
+
+    /**
+     * 获取收藏列表
+     */
+    public static Observable<ResponseData<ArticleList>> collectList(int page) {
+        return OkGo.<ResponseData<ArticleList>>get(String.format(collectListUrl, page))
+                .converter(new Converter<ResponseData<ArticleList>>() {
+                    @Override
+                    public ResponseData<ArticleList> convertResponse(Response response) throws Throwable {
+                        Type type = new TypeToken<ResponseData<ArticleList>>() {
+
+                        }.getType();
+                        return gson.fromJson(response.body().string(), type);
+                    }
+                }).adapt(new ObservableBody<>());
+
+    }
+
+    /**
+     * 获取搜索热词称
+     */
+    public static Observable<ResponseData<List<HotKeyBean>>> hotKey() {
+       return OkGo.<ResponseData<List<HotKeyBean>>>get(hotKeyUrl)
+               .converter(new Converter<ResponseData<List<HotKeyBean>>>() {
+                   @Override
+                   public ResponseData<List<HotKeyBean>> convertResponse(Response response) throws Throwable {
+                       Type type = new TypeToken<ResponseData<List<HotKeyBean>>>() {
 
                        }.getType();
                        return gson.fromJson(response.body().string(), type);
