@@ -36,7 +36,6 @@ public class ServiceApi {
     public static final String treeArticleUrl = BASE_URL + "article/list/%d/json?cid=%d";//2.2 知识体系下的文章
     public static final String collectListUrl = BASE_URL + "lg/collect/list/%d/json";//6.1 收藏文章列表
     public static final String hotKeyUrl = BASE_URL + "hotkey/json";//1.4 搜索热词
-    public static final String queryUrl = BASE_URL + "article/query/%d/json";//7.1 搜索
 
 
     private static Gson gson = new Gson();
@@ -220,22 +219,5 @@ public class ServiceApi {
                        return gson.fromJson(response.body().string(), type);
                    }
                }).adapt(new ObservableBody<>());
-    }
-
-    /**
-     * 搜索文章
-     */
-    public static Observable<ResponseData<ArticleList>> queryArticle(int page, String key) {
-        return OkGo.<ResponseData<ArticleList>>post(String.format(queryUrl, page))
-                .params("k", key)
-                .converter(new Converter<ResponseData<ArticleList>>() {
-                    @Override
-                    public ResponseData<ArticleList> convertResponse(Response response) throws Throwable {
-                        Type type = new TypeToken<ResponseData<ArticleList>>() {
-
-                        }.getType();
-                        return gson.fromJson(response.body().string(), type);
-                    }
-                }).adapt(new ObservableBody<>());
     }
 }
