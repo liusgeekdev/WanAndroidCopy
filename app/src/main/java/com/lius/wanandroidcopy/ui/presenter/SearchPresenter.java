@@ -2,6 +2,7 @@ package com.lius.wanandroidcopy.ui.presenter;
 
 import com.lius.wanandroidcopy.api.ServiceApi;
 import com.lius.wanandroidcopy.helper.RxObserver;
+import com.lius.wanandroidcopy.model.ArticleList;
 import com.lius.wanandroidcopy.model.HotKeyBean;
 import com.lius.wanandroidcopy.model.ResponseData;
 import com.lius.wanandroidcopy.ui.base.BasePresenter;
@@ -33,7 +34,39 @@ public class SearchPresenter extends BasePresenter<SearchView> {
 
     }
 
-    public void search(String key) {
+    public void search(String key){
+        mCurrentPage = 0;
+        ServiceApi.queryArticle(mCurrentPage,key)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new RxObserver<ResponseData<ArticleList>>() {
+                    @Override
+                    public void _onNext(ResponseData<ArticleList> data) {
+                        getMvpView().searchSuccess(data);
+                    }
 
+                    @Override
+                    public void _onError(String errorMessage) {
+                        getMvpView().searchError(errorMessage);
+                    }
+                });
+    }
+
+    public void loadMore(String key){
+        mCurrentPage ++;
+        ServiceApi.queryArticle(mCurrentPage,key)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new RxObserver<ResponseData<ArticleList>>() {
+                    @Override
+                    public void _onNext(ResponseData<ArticleList> data) {
+                        getMvpView().loadMoreSuccess(data);
+                    }
+
+                    @Override
+                    public void _onError(String errorMessage) {
+                        getMvpView().loadMoreError(errorMessage);
+                    }
+                });
     }
 }
