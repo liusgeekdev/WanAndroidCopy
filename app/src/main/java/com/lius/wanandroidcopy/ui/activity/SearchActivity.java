@@ -182,7 +182,7 @@ public class SearchActivity extends BaseActivity<SearchPresenter, SearchView> im
         }
     }
 
-    @OnClick({R.id.icon_clean_input, R.id.icon_search, R.id.icon_return})
+    @OnClick({R.id.icon_clean_input, R.id.icon_return})
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.icon_clean_input:

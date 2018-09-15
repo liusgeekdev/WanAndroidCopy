@@ -13,7 +13,7 @@
         android:orientation="vertical"
         android:paddingTop="@dimen/dp_10">
 
-        <com.wisedeve.wanandroid.widget.RoundImageView
+        <com.lius.wanandroidcopy.widget.RoundImageView
             android:id="@+id/iv_head"
             android:layout_width="64dp"
             android:layout_height="64dp"
